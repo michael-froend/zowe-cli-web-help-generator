@@ -66,7 +66,7 @@ jobs:
     
     - name: Get Zowe version (V1)
       id: get-version-v1
-      run: echo "::set-output name=number::$(echo 'CLI_v'$(npx zowe --version))"
+      run: echo "::set-output name=number::$(echo 'CLI_v'$(zowe --version))"
 
     - name: Build Web Help (V1)
       id: build
@@ -101,7 +101,7 @@ jobs:
     
     # - name: Get Zowe version (V2)
     #   id: get-version-v2
-    #   run: echo "::set-output name=number::$(echo 'CLI_v'$(npx zowe --version))"
+    #   run: echo "::set-output name=number::$(echo 'CLI_v'$(zowe --version))"
 
     # - name: Build Web Help (V2)
     #   id: build
