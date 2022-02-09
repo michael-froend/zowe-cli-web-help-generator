@@ -1,0 +1,164 @@
+name: Update Pages
+
+on:
+  schedule:
+  - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-pages:
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_MESSAGE: 'Update Nightly Zowe CLI Web Help'
+    steps:
+    - name: Checkout V1
+      uses: actions/checkout@v2
+      with:
+        ref: master
+        path: v1
+
+    # - name: Checkout V2
+    #   uses: actions/checkout@v2
+    #   with:
+    #     ref: next
+    #     path: v2
+    
+    - name: Checkout gh-pages
+      uses: actions/checkout@v2
+      with:
+        ref: gh-pages
+        path: pages
+    
+    - name: Use Node.js LTS
+      uses: actions/setup-node@v2
+      with:
+        node-version: lts/*
+
+    - name: Setup .npmrc
+      id: setup-npmrc
+      run: npm config set @zowe:registry=https://zowe.jfrog.io/zowe/api/npm/npm-local-release/
+
+    - name: Install Node Package Dependencies (V1)
+      working-directory: ./v1
+      run: npm i
+    
+    # - name: Install Node Package Dependencies (V2)
+    #   working-directory: ./v2
+    #   run: npm i
+    
+    - name: Install Node Package Dependencies (Pages)
+      working-directory: ./pages
+      run: npm i
+
+    - name: Set Up Zowe (V1)
+      id: setup-zowe-v1
+      run: |
+        npm install -g @zowe/cli@zowe-v1-lts
+        zowe plugins install @zowe/cics-for-zowe-cli@zowe-v1-lts
+        zowe plugins install @zowe/db2-for-zowe-cli@zowe-v1-lts
+        zowe plugins install @zowe/ims-for-zowe-cli@zowe-v1-lts
+        zowe plugins install @zowe/mq-for-zowe-cli@zowe-v1-lts
+        zowe plugins install @zowe/secure-credential-store-for-zowe-cli@zowe-v1-lts
+        zowe plugins install @zowe/zos-ftp-for-zowe-cli@zowe-v1-lts
+    
+    - name: Get Zowe version (V1)
+      id: get-version-v1
+      run: echo "::set-output name=number::$(echo 'CLI_v'$(npx zowe --version))"
+
+    - name: Build Web Help (V1)
+      id: build
+      working-directory: ./v1
+      run: |
+        which zowe || true
+        zowe --version || true
+        npm run build:local -- ${{ steps.get-version-v1.outputs.number }}
+        export margin="0.4in"
+        puppeteer print ./generatedWebHelp/docs/all.html ./zowe.pdf --margin-top $margin --margin-right $margin --margin-bottom $margin --margin-left $margin --no-sandbox 
+
+    - name: Archive Results (V1)
+      id: upload-v1
+      uses: actions/upload-artifact@v2
+      working-directory: ./v1
+      with:
+        name: results-v1
+        path: |
+          generatedWebHelp/
+          zowe.pdf
+
+    # - name: Set Up Zowe (V2)
+    #   id: setup-zowe-v2
+    #   run: |
+    #     npm uninstall -g @zowe/cli
+    #     rm -rf ~/.zowe
+    #     npm install -g @zowe/cli@zowe-v2-lts
+    #     zowe plugins install @zowe/cics-for-zowe-cli@zowe-v2-lts
+    #     zowe plugins install @zowe/db2-for-zowe-cli@zowe-v2-lts
+    #     zowe plugins install @zowe/ims-for-zowe-cli@zowe-v2-lts
+    #     zowe plugins install @zowe/mq-for-zowe-cli@zowe-v2-lts
+    #     zowe plugins install @zowe/zos-ftp-for-zowe-cli@zowe-v2-lts
+    
+    # - name: Get Zowe version (V2)
+    #   id: get-version-v2
+    #   run: echo "::set-output name=number::$(echo 'CLI_v'$(npx zowe --version))"
+
+    # - name: Build Web Help (V2)
+    #   id: build
+    #   working-directory: ./v2
+    #   run: |
+    #     which zowe || true
+    #     zowe --version || true
+    #     npm run build:local -- ${{ steps.get-version-v2.outputs.number }}
+    #     export margin="0.4in"
+    #     puppeteer print ./generatedWebHelp/docs/all.html ./zowe.pdf --margin-top $margin --margin-right $margin --margin-bottom $margin --margin-left $margin --no-sandbox 
+
+    # - name: Archive Results (V2)
+    #   id: upload-v2
+    #   uses: actions/upload-artifact@v2
+    #   working-directory: ./v2
+    #   with:
+    #     name: results-v2
+    #     path: |
+    #       generatedWebHelp/
+    #       zowe.pdf
+    
+    - name: Clear Existing WebHelp
+      id: clear-existing-webhelp
+      working-directory: ./pages
+      run: rm -rf ./zowe-v1-lts ./zowe-v2-lts
+
+    - name: Download Artifacts (V1)
+      id: download-gh-pages-v1
+      uses: actions/download-artifact@v2
+      working-directory: ./pages
+      with:
+        name: results-v1
+        path: zowe-v1-lts
+    
+    # - name: Download Artifacts (V2)
+    #   id: download-gh-pages-v2
+    #   uses: actions/download-artifact@v2
+    #   working-directory: ./pages
+    #   with:
+    #     name: results-v2
+    #     path: zowe-v2-lts
+
+    - name: Optimization (V1)
+      id: optimize-gh-pages-v1
+      working-directory: ./pages
+      run: |
+        mv ./zowe-v1-lts/generatedWebHelp/* ./zowe-v1-lts/.
+        rm -rf ./zowe-v1-lts/generatedWebHelp ./zowe-v1-lts/zowe.pdf
+    
+    # - name: Optimization (V2)
+    #   id: optimize-gh-pages-v2
+    #   working-directory: ./pages
+    #   run: |
+    #     mv ./zowe-v2-lts/generatedWebHelp/* ./zowe-v2-lts/.
+    #     rm -rf ./zowe-v2-lts/generatedWebHelp ./zowe-v2-lts/zowe.pdf
+
+    - name: Commit Changes
+      id: commit
+      working-directory: ./pages
+      with:
+        commit_message: ${{ env.COMMIT_MESSAGE }}
+        commit_options: '--signoff'
