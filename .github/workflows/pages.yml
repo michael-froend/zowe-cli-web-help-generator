@@ -78,12 +78,11 @@ jobs:
     - name: Archive Results (V1)
       id: upload-v1
       uses: actions/upload-artifact@v2
-      working-directory: ./v1
       with:
         name: results-v1
         path: |
-          generatedWebHelp/
-          zowe.pdf
+          ./v1/generatedWebHelp/
+          ./v1/zowe.pdf
 
     # - name: Set Up Zowe (V2)
     #   id: setup-zowe-v2
@@ -118,8 +117,8 @@ jobs:
     #   with:
     #     name: results-v2
     #     path: |
-    #       generatedWebHelp/
-    #       zowe.pdf
+    #       ./v2/generatedWebHelp/
+    #       ./v2/zowe.pdf
     
     - name: Clear Existing WebHelp
       id: clear-existing-webhelp
@@ -129,18 +128,16 @@ jobs:
     - name: Download Artifacts (V1)
       id: download-gh-pages-v1
       uses: actions/download-artifact@v2
-      working-directory: ./pages
       with:
         name: results-v1
-        path: zowe-v1-lts
+        path: ./pages/zowe-v1-lts
     
     # - name: Download Artifacts (V2)
     #   id: download-gh-pages-v2
     #   uses: actions/download-artifact@v2
-    #   working-directory: ./pages
     #   with:
     #     name: results-v2
-    #     path: zowe-v2-lts
+    #     path: ./pages/zowe-v2-lts
 
     - name: Optimization (V1)
       id: optimize-gh-pages-v1
@@ -161,5 +158,6 @@ jobs:
       working-directory: ./pages
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
+        repository: ./pages/
         commit_message: ${{ env.COMMIT_MESSAGE }}
         commit_options: '--signoff'
