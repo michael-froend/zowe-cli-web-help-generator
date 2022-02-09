@@ -49,6 +49,9 @@ jobs:
     - name: Install Node Package Dependencies (Pages)
       working-directory: ./pages
       run: npm i
+    
+    - name: Install Node Package Dependencies (Puppeteer)
+      run: npm install -g puppeteer-cli
 
     - name: Set Up Zowe (V1)
       id: setup-zowe-v1
