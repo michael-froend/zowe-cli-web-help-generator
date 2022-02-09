@@ -155,7 +155,6 @@ jobs:
 
     - name: Commit Changes
       id: commit
-      working-directory: ./pages
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         repository: ./pages/
