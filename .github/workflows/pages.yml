@@ -26,7 +26,7 @@ jobs:
     - name: Checkout gh-pages
       uses: actions/checkout@v2
       with:
-        ref: gh-pages
+        ref: gh-pages-poc
         path: pages
     
     - name: Use Node.js LTS
