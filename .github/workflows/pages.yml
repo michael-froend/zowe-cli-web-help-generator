@@ -49,9 +49,6 @@ jobs:
     - name: Install Node Package Dependencies (Pages)
       working-directory: ./pages
       run: npm i
-    
-    - name: Install Node Package Dependencies (Puppeteer)
-      run: npm install -g puppeteer-cli
 
     - name: Set Up Zowe (V1)
       id: setup-zowe-v1
@@ -75,8 +72,6 @@ jobs:
         which zowe || true
         zowe --version || true
         npm run build:local -- ${{ steps.get-version-v1.outputs.number }}
-        export margin="0.4in"
-        puppeteer print ./generatedWebHelp/docs/all.html ./zowe.pdf --margin-top $margin --margin-right $margin --margin-bottom $margin --margin-left $margin --no-sandbox 
 
     - name: Archive Results (V1)
       id: upload-v1
@@ -85,7 +80,6 @@ jobs:
         name: results-v1
         path: |
           ./v1/generatedWebHelp/
-          ./v1/zowe.pdf
 
     # - name: Set Up Zowe (V2)
     #   id: setup-zowe-v2
@@ -110,8 +104,6 @@ jobs:
     #     which zowe || true
     #     zowe --version || true
     #     npm run build:local -- ${{ steps.get-version-v2.outputs.number }}
-    #     export margin="0.4in"
-    #     puppeteer print ./generatedWebHelp/docs/all.html ./zowe.pdf --margin-top $margin --margin-right $margin --margin-bottom $margin --margin-left $margin --no-sandbox 
 
     # - name: Archive Results (V2)
     #   id: upload-v2
@@ -121,40 +113,39 @@ jobs:
     #     name: results-v2
     #     path: |
     #       ./v2/generatedWebHelp/
-    #       ./v2/zowe.pdf
     
     - name: Clear Existing WebHelp
       id: clear-existing-webhelp
       working-directory: ./pages
-      run: rm -rf ./zowe-v1-lts ./zowe-v2-lts
+      run: rm -rf ./zowe-v1 ./zowe-v2
 
     - name: Download Artifacts (V1)
       id: download-gh-pages-v1
       uses: actions/download-artifact@v2
       with:
         name: results-v1
-        path: ./pages/zowe-v1-lts
+        path: ./pages/zowe-v1
     
     # - name: Download Artifacts (V2)
     #   id: download-gh-pages-v2
     #   uses: actions/download-artifact@v2
     #   with:
     #     name: results-v2
-    #     path: ./pages/zowe-v2-lts
+    #     path: ./pages/zowe-v2
 
     - name: Optimization (V1)
       id: optimize-gh-pages-v1
       working-directory: ./pages
       run: |
-        mv ./zowe-v1-lts/generatedWebHelp/* ./zowe-v1-lts/.
-        rm -rf ./zowe-v1-lts/generatedWebHelp ./zowe-v1-lts/zowe.pdf
+        mv ./zowe-v1/generatedWebHelp/* ./zowe-v1/.
+        rm -rf ./zowe-v1/generatedWebHelp
     
     # - name: Optimization (V2)
     #   id: optimize-gh-pages-v2
     #   working-directory: ./pages
     #   run: |
-    #     mv ./zowe-v2-lts/generatedWebHelp/* ./zowe-v2-lts/.
-    #     rm -rf ./zowe-v2-lts/generatedWebHelp ./zowe-v2-lts/zowe.pdf
+    #     mv ./zowe-v2/generatedWebHelp/* ./zowe-v2/.
+    #     rm -rf ./zowe-v2/generatedWebHelp
 
     - name: Commit Changes
       id: commit
